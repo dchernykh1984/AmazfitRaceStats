@@ -1,0 +1,23 @@
+{
+  "name": "amazfit-race-stats",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Zepp OS mini app that shows a rider's live race standing on Amazfit watches.",
+  "license": "MIT",
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.16.0",
+    "eslint": "^9.16.0",
+    "eslint-config-prettier": "^9.1.0",
+    "globals": "^15.13.0",
+    "prettier": "^3.4.2",
+    "vitest": "^2.1.8"
+  }
+}
