@@ -1,0 +1,21 @@
+name: Release Please
+
+# On every push to main, release-please maintains a "release PR" that bumps the
+# version in package.json and updates CHANGELOG.md from the Conventional Commits.
+# Merging that PR tags the release and creates a GitHub Release. The store bundle
+# (.zab) is built and attached by the release build workflow.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
