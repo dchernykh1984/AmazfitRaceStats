@@ -55,12 +55,13 @@ npm install
 npm test           # run the unit tests (Vitest)
 npm run lint       # ESLint
 npm run format     # rewrite files with Prettier
+npm run preview    # QR-preview on a device via the Zepp app in Developer Mode
+npm run build      # produce the .zab store bundle
 ```
 
-To build, preview on a device, or simulate, install the
-[Zepp OS SDK / Zeus CLI](https://docs.zepp.com/docs/guides/quick-start/) and use
-`zeus preview` (QR to the Zepp app in Developer Mode) and `zeus build` (produces the
-`.zab` store bundle).
+`preview` and `build` fetch the [Zeus CLI](https://docs.zepp.com/docs/guides/quick-start/)
+on demand (`npx`), so it is not tracked as a dependency; the first run downloads it.
+Building on a device also needs the Zepp OS SDK targets that Zeus fetches.
 
 ### Pre-commit hooks (contributors)
 
