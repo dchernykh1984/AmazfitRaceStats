@@ -33,6 +33,7 @@ Page(
       stats: null,
       widgets: [],
       timer: null,
+      destroyed: false,
     },
 
     build() {
@@ -50,6 +51,7 @@ Page(
     },
 
     onDestroy() {
+      this.state.destroyed = true;
       if (this.state.timer) {
         clearInterval(this.state.timer);
         this.state.timer = null;
@@ -57,10 +59,14 @@ Page(
     },
 
     // Ask the side service for the latest stats and the row configuration, then
-    // redraw. Failures are ignored: the last frame stays on screen.
+    // redraw. Failures are ignored: the last frame stays on screen. A reply that
+    // arrives after the page is gone is dropped, so it never touches freed widgets.
     refresh() {
       this.request({ method: GET_STATS })
         .then((data) => {
+          if (this.state.destroyed) {
+            return;
+          }
           const payload = data || {};
           this.state.stats = payload.stats || null;
           this.state.rows = payload.rows || [];
@@ -83,28 +89,44 @@ Page(
 
       const usableHeight = DEVICE_HEIGHT - 2 * VERTICAL_MARGIN;
       const bandHeight = Math.floor(usableHeight / count);
-      const valueSize = clamp(Math.floor(bandHeight * 0.44), 22, 56);
-      const labelSize = clamp(Math.floor(bandHeight * 0.28), 16, 30);
+
+      // A caption sits above a larger value. Size both so the whole block fits the
+      // band with a gap between them, then centre the block - this is what keeps
+      // the two lines from overlapping when many rows squeeze the band.
+      const gap = 2;
+      let labelSize = clamp(Math.floor(bandHeight * 0.3), 14, 30);
+      let valueSize = clamp(Math.floor(bandHeight * 0.48), 22, 56);
+      if (labelSize + gap + valueSize > bandHeight) {
+        const scale = (bandHeight - gap) / (labelSize + valueSize);
+        labelSize = Math.max(12, Math.floor(labelSize * scale));
+        valueSize = Math.max(16, Math.floor(valueSize * scale));
+      }
+      const blockHeight = labelSize + gap + valueSize;
 
       for (let i = 0; i < count; i++) {
         const bandTop = VERTICAL_MARGIN + i * bandHeight;
-        const labelY = bandTop + Math.floor(bandHeight * 0.1);
-        const valueY = bandTop + Math.floor(bandHeight * 0.44);
+        const blockTop = bandTop + Math.floor((bandHeight - blockHeight) / 2);
 
-        this.drawLine(labelY, labelSize, COLOR_LABEL, labelFor(this.state.language, rows[i]));
-        this.drawLine(valueY, valueSize, COLOR_VALUE, displayOr(this.state.stats, rows[i]));
+        this.drawLine(blockTop, labelSize, COLOR_LABEL, labelFor(this.state.language, rows[i]));
+        this.drawLine(
+          blockTop + labelSize + gap,
+          valueSize,
+          COLOR_VALUE,
+          displayOr(this.state.stats, rows[i])
+        );
       }
     },
 
     // Draw one horizontally-centred line, its width limited to the chord of the
     // round screen at that height so the bezel cannot clip it.
     drawLine(y, size, color, text) {
-      const width = safeLineWidth(DEVICE_WIDTH, y + size / 2, size, PADDING);
+      const height = size + 2;
+      const width = safeLineWidth(DEVICE_WIDTH, y + height / 2, height, PADDING);
       const widget = hmUI.createWidget(hmUI.widget.TEXT, {
         x: Math.round((DEVICE_WIDTH - width) / 2),
         y,
         w: width,
-        h: size + 6,
+        h: height,
         color,
         text_size: size,
         align_h: hmUI.align.CENTER_H,
