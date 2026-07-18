@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { METRICS, MAX_ROWS, metricForIndex, clampRowCount, isKnownKey } from "../lib/metrics.js";
+import {
+  METRICS,
+  MAX_ROWS,
+  metricForIndex,
+  clampRowCount,
+  isKnownKey,
+  pickKnownStats,
+} from "../lib/metrics.js";
 
 describe("metricForIndex", () => {
   it("maps a dropdown index to its metric", () => {
@@ -33,5 +40,19 @@ describe("isKnownKey", () => {
     expect(isKnownKey("gap_leader_abs")).toBe(true);
     expect(isKnownKey("qty_abs")).toBe(true);
     expect(isKnownKey("wattage")).toBe(false);
+  });
+});
+
+describe("pickKnownStats", () => {
+  it("keeps known keys and drops anything the server adds later", () => {
+    expect(pickKnownStats({ place_abs: "3", qty_abs: "7", wattage: "250" })).toEqual({
+      place_abs: "3",
+      qty_abs: "7",
+    });
+  });
+
+  it("returns an empty object for a null or non-object input", () => {
+    expect(pickKnownStats(null)).toEqual({});
+    expect(pickKnownStats("nope")).toEqual({});
   });
 });
