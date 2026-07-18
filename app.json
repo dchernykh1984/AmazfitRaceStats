@@ -1,0 +1,53 @@
+{
+  "configVersion": "v3",
+  "app": {
+    "appId": 1000001,
+    "appName": "Live Race Stats",
+    "appType": "app",
+    "version": {
+      "code": 1,
+      "name": "0.1.0"
+    },
+    "icon": "icon.png",
+    "vender": "dchernykh1984",
+    "description": "Live race standing on your wrist: place, gaps to the riders ahead, behind and to the leader, per-lap dynamics, and laps."
+  },
+  "permissions": ["data:os.device.info", "device:os.local_storage"],
+  "runtime": {
+    "apiVersion": {
+      "compatible": "3.0.0",
+      "target": "3.0.0",
+      "minVersion": "3.0"
+    }
+  },
+  "targets": {
+    "common": {
+      "module": {
+        "page": {
+          "pages": ["page/index"]
+        },
+        "app-side": {
+          "path": "app-side/index"
+        },
+        "setting": {
+          "path": "setting/index"
+        }
+      },
+      "platforms": [
+        {
+          "st": "r",
+          "dw": 466
+        }
+      ]
+    }
+  },
+  "i18n": {
+    "en-US": {
+      "appName": "Live Race Stats"
+    },
+    "ru-RU": {
+      "appName": "Live Race Stats"
+    }
+  },
+  "defaultLanguage": "en-US"
+}
