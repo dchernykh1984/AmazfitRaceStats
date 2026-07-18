@@ -10,7 +10,10 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "dev": "zeus dev",
+    "preview": "zeus preview",
+    "build": "zeus build"
   },
   "devDependencies": {
     "@eslint/js": "^9.16.0",
