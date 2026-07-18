@@ -51,7 +51,7 @@ jobs:
       - name: Locate the .zab
         id: zab
         run: |
-          zab="$(find dist build . -maxdepth 2 -name '*.zab' 2>/dev/null | head -1)"
+          zab="$(find . -maxdepth 2 -name '*.zab' -not -path './node_modules/*' 2>/dev/null | head -1)"
           if [ -z "$zab" ]; then
             echo "No .zab produced by zeus build" >&2
             exit 1
