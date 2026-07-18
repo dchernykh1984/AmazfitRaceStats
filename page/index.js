@@ -37,7 +37,15 @@ Page(
     },
 
     build() {
-      this.state.language = languageFromZeppCode(getLanguage());
+      let languageCode = 2;
+      try {
+        languageCode = getLanguage();
+      } catch {
+        // Some devices/firmwares may not expose the setting; fall back to English
+        // rather than let build() throw and leave the screen blank.
+      }
+      this.state.language = languageFromZeppCode(languageCode);
+
       hmUI.createWidget(hmUI.widget.FILL_RECT, {
         x: 0,
         y: 0,
@@ -49,7 +57,7 @@ Page(
       // Show the "waiting for data" placeholder at once, so the screen is never a
       // blank black circle while the first request is in flight - or forever, if
       // the phone is not connected. It is replaced by the rows on the first reply.
-      this.drawLine(Math.round(DEVICE_HEIGHT / 2 - 28), 48, COLOR_VALUE, NO_VALUE);
+      this.drawWaiting();
 
       this.refresh();
       this.state.timer = setInterval(() => this.refresh(), REFRESH_MS);
@@ -89,6 +97,7 @@ Page(
       const rows = this.state.rows;
       const count = rows.length;
       if (count === 0) {
+        this.drawWaiting();
         return;
       }
 
@@ -120,6 +129,12 @@ Page(
           displayOr(this.state.stats, rows[i])
         );
       }
+    },
+
+    // The centred "waiting for data" placeholder, drawn before the first reply
+    // and whenever there is nothing to show.
+    drawWaiting() {
+      this.drawLine(Math.round(DEVICE_HEIGHT / 2 - 28), 48, COLOR_VALUE, NO_VALUE);
     },
 
     // Draw one horizontally-centred line, its width limited to the chord of the
