@@ -34,6 +34,7 @@ Page(
       widgets: [],
       timer: null,
       destroyed: false,
+      loading: false,
     },
 
     build() {
@@ -75,8 +76,15 @@ Page(
     // redraw. Failures are ignored: the last frame stays on screen. A reply that
     // arrives after the page is gone is dropped, so it never touches freed widgets.
     refresh() {
+      // Skip if a request is still in flight, so a slow network cannot pile up
+      // overlapping requests on each timer tick.
+      if (this.state.loading) {
+        return;
+      }
+      this.state.loading = true;
       this.request({ method: GET_STATS })
         .then((data) => {
+          this.state.loading = false;
           if (this.state.destroyed) {
             return;
           }
@@ -85,7 +93,9 @@ Page(
           this.state.rows = payload.rows || [];
           this.render();
         })
-        .catch(() => {});
+        .catch(() => {
+          this.state.loading = false;
+        });
     },
 
     render() {
