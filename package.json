@@ -11,21 +11,19 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
-    "dev": "zeus dev",
-    "preview": "zeus preview",
-    "build": "zeus build"
+    "dev": "npx --yes @zeppos/zeus-cli@1.9.2 dev",
+    "preview": "npx --yes @zeppos/zeus-cli@1.9.2 preview",
+    "build": "npx --yes @zeppos/zeus-cli@1.9.2 build"
+  },
+  "dependencies": {
+    "@zeppos/zml": "^0.0.9"
   },
   "devDependencies": {
     "@eslint/js": "^9.16.0",
-    "@zeppos/device-types": "^3.0.1",
-    "@zeppos/zeus-cli": "^1.9.2",
     "eslint": "^9.16.0",
     "eslint-config-prettier": "^9.1.0",
     "globals": "^15.13.0",
     "prettier": "^3.4.2",
-    "vitest": "^2.1.8"
-  },
-  "dependencies": {
-    "@zeppos/zml": "^0.0.9"
+    "vitest": "^3.2.4"
   }
 }
