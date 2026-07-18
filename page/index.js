@@ -4,8 +4,8 @@ import { BasePage } from "@zeppos/zml/base-page";
 
 import { displayOr, NO_VALUE } from "../lib/stats-formatter.js";
 import { labelFor, languageFromZeppCode } from "../lib/i18n/index.js";
-import { safeLineWidth } from "../lib/round-geometry.js";
-import { DEVICE_WIDTH, DEVICE_HEIGHT } from "../utils/config/device.js";
+import { lineWidth } from "../lib/round-geometry.js";
+import { DEVICE_WIDTH, DEVICE_HEIGHT, IS_ROUND } from "../utils/config/device.js";
 import {
   COLOR_BACKGROUND,
   COLOR_VALUE,
@@ -147,11 +147,12 @@ Page(
       this.drawLine(Math.round(DEVICE_HEIGHT / 2 - 28), 48, COLOR_VALUE, NO_VALUE);
     },
 
-    // Draw one horizontally-centred line, its width limited to the chord of the
-    // round screen at that height so the bezel cannot clip it.
+    // Draw one horizontally-centred line. On a round screen its width is limited
+    // to the chord at that height so the bezel cannot clip it; a square screen
+    // uses the full width minus padding.
     drawLine(y, size, color, text) {
       const height = size + 2;
-      const width = safeLineWidth(DEVICE_WIDTH, y + height / 2, height, PADDING);
+      const width = lineWidth(IS_ROUND, DEVICE_WIDTH, y + height / 2, height, PADDING);
       const widget = hmUI.createWidget(hmUI.widget.TEXT, {
         x: Math.round((DEVICE_WIDTH - width) / 2),
         y,
