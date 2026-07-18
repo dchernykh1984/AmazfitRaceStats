@@ -43,7 +43,10 @@ jobs:
         run: npm ci
 
       - name: Build the store bundle (.zab)
-        run: npx zeus build
+        # The Zeus CLI is fetched on demand (npm run build -> npx) rather than
+        # tracked as a dependency, to keep its large, outdated transitive tree out
+        # of the lockfile and the security scan.
+        run: npm run build
 
       - name: Locate the .zab
         id: zab
