@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { LABELS } from "../lib/i18n/labels.js";
-import { LANGUAGES, DEFAULT_LANGUAGE, labelFor, resolveLanguage } from "../lib/i18n/index.js";
+import {
+  LANGUAGES,
+  DEFAULT_LANGUAGE,
+  labelFor,
+  resolveLanguage,
+  languageFromZeppCode,
+} from "../lib/i18n/index.js";
 import { METRICS } from "../lib/metrics.js";
 
 // The on-watch label budget: a row header longer than this is truncated on the
@@ -43,6 +49,20 @@ describe("resolveLanguage", () => {
     expect(resolveLanguage("ja-JP")).toBe(DEFAULT_LANGUAGE);
     expect(resolveLanguage("")).toBe(DEFAULT_LANGUAGE);
     expect(resolveLanguage(undefined)).toBe(DEFAULT_LANGUAGE);
+  });
+});
+
+describe("languageFromZeppCode", () => {
+  it("maps the Zepp OS integer language codes we translate", () => {
+    expect(languageFromZeppCode(2)).toBe("en");
+    expect(languageFromZeppCode(4)).toBe("ru");
+    expect(languageFromZeppCode(22)).toBe("cs");
+  });
+
+  it("falls back to the default for codes we do not translate", () => {
+    expect(languageFromZeppCode(0)).toBe(DEFAULT_LANGUAGE);
+    expect(languageFromZeppCode(999)).toBe(DEFAULT_LANGUAGE);
+    expect(languageFromZeppCode(undefined)).toBe(DEFAULT_LANGUAGE);
   });
 });
 
