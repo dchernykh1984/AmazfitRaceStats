@@ -2,7 +2,7 @@ import * as hmUI from "@zos/ui";
 import { getLanguage } from "@zos/settings";
 import { BasePage } from "@zeppos/zml/base-page";
 
-import { displayOr } from "../lib/stats-formatter.js";
+import { displayOr, NO_VALUE } from "../lib/stats-formatter.js";
 import { labelFor, languageFromZeppCode } from "../lib/i18n/index.js";
 import { safeLineWidth } from "../lib/round-geometry.js";
 import { DEVICE_WIDTH, DEVICE_HEIGHT } from "../utils/config/device.js";
@@ -45,6 +45,11 @@ Page(
         h: DEVICE_HEIGHT,
         color: COLOR_BACKGROUND,
       });
+
+      // Show the "waiting for data" placeholder at once, so the screen is never a
+      // blank black circle while the first request is in flight - or forever, if
+      // the phone is not connected. It is replaced by the rows on the first reply.
+      this.drawLine(Math.round(DEVICE_HEIGHT / 2 - 28), 48, COLOR_VALUE, NO_VALUE);
 
       this.refresh();
       this.state.timer = setInterval(() => this.refresh(), REFRESH_MS);
