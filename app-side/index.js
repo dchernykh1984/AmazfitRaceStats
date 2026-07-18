@@ -2,7 +2,7 @@ import { BaseSideService, settingsLib } from "@zeppos/zml/base-side";
 
 import { buildRequestUrl } from "../lib/request-url.js";
 import { resolveRowMetrics, SETTING_KEYS, DEFAULT_SITE_URL } from "../lib/settings.js";
-import { MAX_ROWS } from "../lib/metrics.js";
+import { MAX_ROWS, pickKnownStats } from "../lib/metrics.js";
 import { GET_STATS } from "../utils/config/constants.js";
 
 // Read the rider's configuration out of settingsStorage into a plain object.
@@ -37,7 +37,7 @@ async function fetchStats(res) {
   try {
     const response = await fetch({ url, method: "GET" });
     const body = typeof response.body === "string" ? JSON.parse(response.body) : response.body;
-    const stats = body && body.stats ? body.stats : null;
+    const stats = body && body.stats ? pickKnownStats(body.stats) : null;
     res(null, { stats, rows: config.rows });
   } catch {
     res(null, { stats: null, rows: config.rows });
@@ -51,6 +51,10 @@ AppSideService(
     onRequest(req, res) {
       if (req.method === GET_STATS) {
         fetchStats(res);
+      } else {
+        // Always reply, so an unexpected request can never leave the device's
+        // promise pending forever.
+        res(null, { stats: null, rows: [] });
       }
     },
 
