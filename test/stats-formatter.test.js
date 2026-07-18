@@ -56,4 +56,9 @@ describe("displayOr", () => {
     expect(displayOr({ gap_prev_abs: "+0:12" }, "laps")).toBe(NO_VALUE);
     expect(displayOr(null, "place_abs")).toBe(NO_VALUE);
   });
+
+  it("composes a place metric and falls back to NO_VALUE", () => {
+    expect(displayOr({ place_abs: "17", qty_abs: "84" }, "place_abs")).toBe("17/84");
+    expect(displayOr({ qty_abs: "84" }, "place_abs")).toBe(NO_VALUE);
+  });
 });
