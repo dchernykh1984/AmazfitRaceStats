@@ -27,6 +27,11 @@ describe("resolveRowMetrics", () => {
     expect(resolveRowMetrics({ [SETTING_KEYS.ROW_COUNT]: 0 }).length).toBe(1);
   });
 
+  it("treats an unset or empty row count as the default", () => {
+    expect(resolveRowMetrics({ [SETTING_KEYS.ROW_COUNT]: "" }).length).toBe(DEFAULT_ROW_COUNT);
+    expect(resolveRowMetrics({ [SETTING_KEYS.ROW_COUNT]: null }).length).toBe(DEFAULT_ROW_COUNT);
+  });
+
   it("falls back to a valid metric for a bad stored index", () => {
     const settings = {
       [SETTING_KEYS.ROW_COUNT]: 2,
