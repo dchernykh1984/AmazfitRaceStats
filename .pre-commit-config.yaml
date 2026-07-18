@@ -29,7 +29,7 @@ repos:
         name: no non-ASCII characters
         language: pygrep
         entry: '[^\x00-\x7f]'
-        files: '\.(js|ya?ml|md|json)$'
+        files: '\.(m?js|ya?ml|md|json)$'
         exclude: '(package-lock\.json$|CHANGELOG\.md$|/i18n/)'
 
       # Prettier owns formatting for JS, JSON, YAML and Markdown. It runs locally
@@ -38,14 +38,14 @@ repos:
         name: prettier (check)
         entry: npx prettier --check
         language: system
-        files: '\.(js|json|md|ya?ml)$'
+        files: '\.(m?js|json|md|ya?ml)$'
         exclude: 'package-lock\.json$'
 
       - id: eslint
         name: eslint
         entry: npx eslint
         language: system
-        files: '\.js$'
+        files: '\.m?js$'
 
       # The unit tests are quick but not needed on every commit, so they run at
       # pre-push. CI runs them too as a required check.
@@ -54,5 +54,5 @@ repos:
         entry: npm test
         language: system
         pass_filenames: false
-        files: '\.js$'
+        files: '\.m?js$'
         stages: [pre-push]

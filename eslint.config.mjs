@@ -46,7 +46,7 @@ export default [
 
   // Tests and Node-side tooling run under Node/Vitest.
   {
-    files: ["**/*.test.js", "*.config.js", "scripts/**/*.js"],
+    files: ["**/*.test.mjs", "*.config.mjs", "scripts/**/*.js"],
     languageOptions: { globals: { ...globals.node } },
   },
 
