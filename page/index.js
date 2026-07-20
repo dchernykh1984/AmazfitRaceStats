@@ -39,6 +39,17 @@ Page(
     },
 
     build() {
+      // Square devices pre-draw a 64px system status bar (app name + time) that
+      // overlaps the top row; round devices have none. Hide it so the fields get
+      // the whole screen. The API exists only on square firmware, so guard the call.
+      if (!IS_ROUND && typeof hmUI.setStatusBarVisible === "function") {
+        try {
+          hmUI.setStatusBarVisible(false);
+        } catch {
+          // Older firmware without the API: leave the status bar as it is.
+        }
+      }
+
       let languageCode = 2;
       try {
         languageCode = getLanguage();
