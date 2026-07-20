@@ -1,7 +1,13 @@
 import { BaseSideService, settingsLib } from "@zeppos/zml/base-side";
 
 import { buildRequestUrl } from "../lib/request-url.js";
-import { resolveRowMetrics, SETTING_KEYS, DEFAULT_SITE_URL } from "../lib/settings.js";
+import {
+  resolveRowMetrics,
+  SETTING_KEYS,
+  DEFAULT_SITE_URL,
+  DEFAULT_COMPETITION_ID,
+  DEFAULT_BIB,
+} from "../lib/settings.js";
 import { MAX_ROWS, pickKnownStats } from "../lib/metrics.js";
 import { GET_STATS } from "../utils/config/constants.js";
 
@@ -16,8 +22,8 @@ function readConfig() {
   }
   return {
     siteUrl: settingsLib.getItem(SETTING_KEYS.SITE_URL) || DEFAULT_SITE_URL,
-    competitionId: settingsLib.getItem(SETTING_KEYS.COMPETITION_ID),
-    bib: settingsLib.getItem(SETTING_KEYS.BIB),
+    competitionId: settingsLib.getItem(SETTING_KEYS.COMPETITION_ID) || DEFAULT_COMPETITION_ID,
+    bib: settingsLib.getItem(SETTING_KEYS.BIB) || DEFAULT_BIB,
     rows: resolveRowMetrics(raw),
   };
 }
