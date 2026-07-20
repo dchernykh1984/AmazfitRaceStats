@@ -59,7 +59,7 @@ AppSettingsPage({
       const value = stored == null || stored === "" ? String(i) : stored;
       rowPickers.push(
         field(
-          "Row " + (i + 1),
+          "Field " + (i + 1),
           Select({
             options: metricOptions,
             value,
@@ -98,7 +98,7 @@ AppSettingsPage({
         })
       ),
       field(
-        "Rows",
+        "Fields",
         Select({
           options: rowCountOptions,
           value: String(rowCount),
