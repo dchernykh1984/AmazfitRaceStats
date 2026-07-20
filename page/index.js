@@ -2,7 +2,7 @@ import * as hmUI from "@zos/ui";
 import { getLanguage } from "@zos/settings";
 import { BasePage } from "@zeppos/zml/base-page";
 
-import { displayOr, NO_VALUE } from "../lib/stats-formatter.js";
+import { displayOr, keepLatestStats, NO_VALUE } from "../lib/stats-formatter.js";
 import { labelFor, languageFromZeppCode } from "../lib/i18n/index.js";
 import { lineWidth } from "../lib/round-geometry.js";
 import { fieldRows } from "../lib/layout.js";
@@ -85,8 +85,10 @@ Page(
     },
 
     // Ask the side service for the latest stats and the field configuration, then
-    // redraw. Failures are ignored: the last frame stays on screen. A reply that
-    // arrives after the page is gone is dropped, so it never touches freed widgets.
+    // redraw. A reply with no fresh stats (a failed fetch offline, a site error)
+    // keeps the last good standings on screen rather than blanking them to "--" -
+    // a race can lose signal in the woods. A reply that arrives after the page is
+    // gone is dropped, so it never touches freed widgets.
     refresh() {
       // Skip if a request is still in flight, so a slow network cannot pile up
       // overlapping requests on each timer tick.
@@ -101,8 +103,15 @@ Page(
             return;
           }
           const payload = data || {};
-          this.state.stats = payload.stats || null;
-          this.state.rows = payload.rows || [];
+          // Keep the last good stats when this reply carries none, so a dropped
+          // request in the woods does not wipe the standings; they update on the
+          // next successful tick.
+          this.state.stats = keepLatestStats(this.state.stats, payload.stats);
+          // The row configuration is local (from settings), safe to apply even when
+          // the fetch failed; keep the last rows if a reply somehow omits them.
+          if (Array.isArray(payload.rows)) {
+            this.state.rows = payload.rows;
+          }
           this.render();
         })
         .catch(() => {
