@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { NO_VALUE, valueFor, placeValue, displayValue, displayOr } from "../lib/stats-formatter.js";
+import {
+  NO_VALUE,
+  valueFor,
+  placeValue,
+  displayValue,
+  displayOr,
+  keepLatestStats,
+} from "../lib/stats-formatter.js";
 
 describe("valueFor", () => {
   it("returns a present string key verbatim", () => {
@@ -60,5 +67,31 @@ describe("displayOr", () => {
   it("composes a place metric and falls back to NO_VALUE", () => {
     expect(displayOr({ place_abs: "17", qty_abs: "84" }, "place_abs")).toBe("17/84");
     expect(displayOr({ qty_abs: "84" }, "place_abs")).toBe(NO_VALUE);
+  });
+});
+
+describe("keepLatestStats", () => {
+  it("replaces the old stats with fresh non-empty ones", () => {
+    const previous = { place_abs: "3" };
+    const incoming = { place_abs: "4", laps: "5/10" };
+    expect(keepLatestStats(previous, incoming)).toBe(incoming);
+  });
+
+  it("keeps the previous stats when the fetch failed (null/undefined/empty)", () => {
+    const previous = { place_abs: "3", laps: "5/10" };
+    expect(keepLatestStats(previous, null)).toBe(previous);
+    expect(keepLatestStats(previous, undefined)).toBe(previous);
+    expect(keepLatestStats(previous, {})).toBe(previous);
+  });
+
+  it("ignores a non-object payload, keeping the previous stats (defensive)", () => {
+    const previous = { place_abs: "3" };
+    expect(keepLatestStats(previous, "oops")).toBe(previous);
+  });
+
+  it("stays empty until the first successful fetch", () => {
+    expect(keepLatestStats(null, null)).toBe(null);
+    expect(keepLatestStats(null, {})).toBe(null);
+    expect(keepLatestStats(null, { place_abs: "1" })).toEqual({ place_abs: "1" });
   });
 });
