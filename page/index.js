@@ -5,6 +5,7 @@ import { BasePage } from "@zeppos/zml/base-page";
 import { displayOr, NO_VALUE } from "../lib/stats-formatter.js";
 import { labelFor, languageFromZeppCode } from "../lib/i18n/index.js";
 import { lineWidth } from "../lib/round-geometry.js";
+import { fieldRows } from "../lib/layout.js";
 import { DEVICE_WIDTH, DEVICE_HEIGHT, IS_ROUND } from "../utils/config/device.js";
 import {
   COLOR_BACKGROUND,
@@ -14,8 +15,8 @@ import {
   GET_STATS,
 } from "../utils/config/constants.js";
 
-// Keep rows clear of the narrow top and bottom of the round screen.
-const VERTICAL_MARGIN = Math.round(DEVICE_HEIGHT * 0.14);
+// Keep the field rows clear of the narrow top and bottom of the round screen.
+const VERTICAL_MARGIN = Math.round(DEVICE_HEIGHT * 0.1);
 const PADDING = 6;
 
 function clamp(value, low, high) {
@@ -57,7 +58,7 @@ Page(
 
       // Show the "waiting for data" placeholder at once, so the screen is never a
       // blank black circle while the first request is in flight - or forever, if
-      // the phone is not connected. It is replaced by the rows on the first reply.
+      // the phone is not connected. It is replaced by the fields on the first reply.
       this.drawWaiting();
 
       this.refresh();
@@ -72,7 +73,7 @@ Page(
       }
     },
 
-    // Ask the side service for the latest stats and the row configuration, then
+    // Ask the side service for the latest stats and the field configuration, then
     // redraw. Failures are ignored: the last frame stays on screen. A reply that
     // arrives after the page is gone is dropped, so it never touches freed widgets.
     refresh() {
@@ -98,66 +99,112 @@ Page(
         });
     },
 
+    // Arrange the fields for the screen shape and draw them. Round watches get a
+    // diamond (fewer fields on the narrow top/bottom rows, more across the wide
+    // middle); square watches get a two-column grid. Each field is a caption above
+    // its value, centred in its cell.
     render() {
       for (let i = 0; i < this.state.widgets.length; i++) {
         hmUI.deleteWidget(this.state.widgets[i]);
       }
       this.state.widgets = [];
 
-      const rows = this.state.rows;
-      const count = rows.length;
+      const metrics = this.state.rows;
+      const count = metrics.length;
       if (count === 0) {
         this.drawWaiting();
         return;
       }
 
+      const pattern = fieldRows(count, IS_ROUND);
       const usableHeight = DEVICE_HEIGHT - 2 * VERTICAL_MARGIN;
-      const bandHeight = Math.floor(usableHeight / count);
+      const bandHeight = Math.floor(usableHeight / pattern.length);
 
-      // A caption sits above a larger value. Size both so the whole block fits the
-      // band with a gap between them, then centre the block - this is what keeps
-      // the two lines from overlapping when many rows squeeze the band.
+      let fieldIndex = 0;
+      for (let r = 0; r < pattern.length; r++) {
+        const cols = pattern[r];
+        const bandTop = VERTICAL_MARGIN + r * bandHeight;
+
+        // Width available to this row: the round chord at the band's binding edge,
+        // or the full square width. The cells split it equally, so a cell can never
+        // poke past the bezel.
+        const rowWidth = lineWidth(
+          IS_ROUND,
+          DEVICE_WIDTH,
+          bandTop + bandHeight / 2,
+          bandHeight,
+          PADDING
+        );
+        const rowLeft = Math.round((DEVICE_WIDTH - rowWidth) / 2);
+        const cellWidth = Math.floor(rowWidth / cols);
+
+        for (let c = 0; c < cols; c++) {
+          this.drawCell(
+            rowLeft + c * cellWidth,
+            cellWidth,
+            bandTop,
+            bandHeight,
+            metrics[fieldIndex]
+          );
+          fieldIndex += 1;
+        }
+      }
+    },
+
+    // One field: a caption above a larger value, both centred in the cell. Sizes
+    // come from the band height; the caption is also shrunk to roughly fit a narrow
+    // cell so a multi-column row does not clip its labels (values are short).
+    drawCell(cellLeft, cellWidth, bandTop, bandHeight, metric) {
       const gap = 2;
-      let labelSize = clamp(Math.floor(bandHeight * 0.3), 14, 30);
-      let valueSize = clamp(Math.floor(bandHeight * 0.48), 22, 56);
+      let labelSize = clamp(Math.floor(bandHeight * 0.3), 12, 28);
+      let valueSize = clamp(Math.floor(bandHeight * 0.46), 18, 52);
       if (labelSize + gap + valueSize > bandHeight) {
         const scale = (bandHeight - gap) / (labelSize + valueSize);
-        labelSize = Math.max(12, Math.floor(labelSize * scale));
-        valueSize = Math.max(16, Math.floor(valueSize * scale));
+        labelSize = Math.max(11, Math.floor(labelSize * scale));
+        valueSize = Math.max(14, Math.floor(valueSize * scale));
       }
+
+      const label = labelFor(this.state.language, metric);
+      const fitWidth = Math.floor(cellWidth / (Math.max(label.length, 1) * 0.55));
+      if (fitWidth < labelSize) {
+        labelSize = Math.max(10, fitWidth);
+      }
+
       const blockHeight = labelSize + gap + valueSize;
-
-      for (let i = 0; i < count; i++) {
-        const bandTop = VERTICAL_MARGIN + i * bandHeight;
-        const blockTop = bandTop + Math.floor((bandHeight - blockHeight) / 2);
-
-        this.drawLine(blockTop, labelSize, COLOR_LABEL, labelFor(this.state.language, rows[i]));
-        this.drawLine(
-          blockTop + labelSize + gap,
-          valueSize,
-          COLOR_VALUE,
-          displayOr(this.state.stats, rows[i])
-        );
-      }
+      const blockTop = bandTop + Math.floor((bandHeight - blockHeight) / 2);
+      this.drawText(cellLeft, cellWidth, blockTop, labelSize, COLOR_LABEL, label);
+      this.drawText(
+        cellLeft,
+        cellWidth,
+        blockTop + labelSize + gap,
+        valueSize,
+        COLOR_VALUE,
+        displayOr(this.state.stats, metric)
+      );
     },
 
-    // The centred "waiting for data" placeholder, drawn before the first reply
-    // and whenever there is nothing to show.
+    // The centred "waiting for data" placeholder, drawn before the first reply and
+    // whenever there is nothing to show.
     drawWaiting() {
-      this.drawLine(Math.round(DEVICE_HEIGHT / 2 - 28), 48, COLOR_VALUE, NO_VALUE);
+      const size = 48;
+      const width = lineWidth(IS_ROUND, DEVICE_WIDTH, DEVICE_HEIGHT / 2, size + 2, PADDING);
+      this.drawText(
+        Math.round((DEVICE_WIDTH - width) / 2),
+        width,
+        Math.round(DEVICE_HEIGHT / 2 - size / 2),
+        size,
+        COLOR_VALUE,
+        NO_VALUE
+      );
     },
 
-    // Draw one horizontally-centred line. On a round screen its width is limited
-    // to the chord at that height so the bezel cannot clip it; a square screen
-    // uses the full width minus padding.
-    drawLine(y, size, color, text) {
-      const height = size + 2;
-      const width = lineWidth(IS_ROUND, DEVICE_WIDTH, y + height / 2, height, PADDING);
+    // Draw one horizontally-centred text widget inside the given cell box.
+    drawText(x, width, y, size, color, text) {
       const widget = hmUI.createWidget(hmUI.widget.TEXT, {
-        x: Math.round((DEVICE_WIDTH - width) / 2),
+        x,
         y,
         w: width,
-        h: height,
+        h: size + 2,
         color,
         text_size: size,
         align_h: hmUI.align.CENTER_H,
