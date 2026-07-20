@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/dchernykh1984/AmazfitRaceStats/compare/amazfit-race-stats-v0.2.0...amazfit-race-stats-v0.2.1) (2026-07-20)
+
+
+### Bug Fixes
+
+* build release ([824777c](https://github.com/dchernykh1984/AmazfitRaceStats/commit/824777c1a83d386105d4a53ac145921dbb53406d))
+
 ## [0.2.0](https://github.com/dchernykh1984/AmazfitRaceStats/compare/amazfit-race-stats-v0.1.0...amazfit-race-stats-v0.2.0) (2026-07-20)
 
 
