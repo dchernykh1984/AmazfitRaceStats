@@ -39,6 +39,8 @@ page/index.js            The device app page that renders the metrics
 app-side/index.js        Side service; the single network request
 setting/index.js         The phone settings screen
 assets/                  Icons and on-watch i18n strings
+scripts/
+  sync-app-version.mjs   Puts the released version into app.json (see below)
 ```
 
 ## Setup
