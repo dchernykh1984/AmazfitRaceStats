@@ -1,11 +1,46 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { syncedAppJson, versionCode } from "../scripts/sync-app-version.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const SCRIPT = join("scripts", "sync-app-version.mjs");
 const read = (file) => JSON.parse(readFileSync(join(ROOT, file), "utf8"));
+
+// Run the script the way npm and CI run it - as a process, for its exit code -
+// against a throwaway checkout holding nothing but the two files it reads. The
+// exported helpers above are the arithmetic; this is the contract the required
+// `version:check` gate is built on, and it is not visible from an import.
+function runScript({ released, name, code }, ...args) {
+  const dir = mkdtempSync(join(tmpdir(), "app-version-"));
+  try {
+    mkdirSync(join(dir, "scripts"));
+    copyFileSync(join(ROOT, SCRIPT), join(dir, SCRIPT));
+    writeFileSync(join(dir, "package.json"), JSON.stringify({ version: released }, null, 2) + "\n");
+    const app = read("app.json");
+    app.app.version = { code, name };
+    writeFileSync(join(dir, "app.json"), JSON.stringify(app, null, 2) + "\n");
+
+    // From inside the throwaway directory, not from wherever vitest was started.
+    // The script resolves both files relative to itself today; if that ever
+    // becomes relative to the working directory, this test has to keep writing
+    // into the sandbox instead of quietly rewriting the repository's app.json.
+    const run = spawnSync(process.execPath, [join(dir, SCRIPT), ...args], {
+      cwd: dir,
+      encoding: "utf8",
+    });
+    return {
+      status: run.status,
+      output: run.stdout + run.stderr,
+      version: JSON.parse(readFileSync(join(dir, "app.json"), "utf8")).app.version,
+    };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
 
 describe("versionCode", () => {
   it("packs a semver into one integer", () => {
@@ -64,14 +99,18 @@ describe("writing the version into app.json", () => {
   // The file is edited by hand and read in diffs, so a version bump has to show
   // up as the two lines it is - not as a reformat of the whole document.
   it("changes nothing else about the file", () => {
-    const written = syncedAppJson(APP, "1.2.3");
+    // A version the repository cannot already be sitting on. Counting the changed
+    // lines only means anything when both of them move, so a version hard-coded
+    // here would fail this test on the release PR that happened to reach it.
+    const next = Number(JSON.parse(APP).app.version.name.split(".")[0]) + 1 + ".2.3";
+    const written = syncedAppJson(APP, next);
     const before = APP.split("\n");
     const after = written.split("\n");
 
     expect(after.length).toBe(before.length);
     const changed = after.filter((line, i) => line !== before[i]);
     expect(changed.length).toBe(2);
-    expect(changed.join(" ")).toContain("1.2.3");
+    expect(changed.join(" ")).toContain(next);
   });
 
   it("leaves everything but the version untouched", () => {
@@ -86,6 +125,53 @@ describe("writing the version into app.json", () => {
   it("is idempotent", () => {
     const once = syncedAppJson(APP, "1.2.3");
     expect(syncedAppJson(once, "1.2.3")).toBe(once);
+  });
+});
+
+describe("running the script", () => {
+  // The one case the pull-request gate exists for: someone bumped package.json,
+  // or edited app.json, and the two drifted apart. A guard that says yes here is
+  // worth nothing, and nothing else in this file would notice.
+  it("fails the check when app.json is behind the release", () => {
+    const run = runScript({ released: "0.4.0", name: "0.3.0", code: 300 }, "--check");
+    expect(run.status).toBe(1);
+    expect(run.output).toContain("0.3.0");
+    expect(run.output).toContain("0.4.0");
+    expect(run.version).toEqual({ name: "0.3.0", code: 300 });
+  });
+
+  // The state of every release PR: release-please has written the name, and the
+  // code is still the previous release's until the build recomputes it. Failing
+  // here would block every release.
+  it("passes the check when only the code is behind", () => {
+    const run = runScript({ released: "0.4.0", name: "0.4.0", code: 300 }, "--check");
+    expect(run.status).toBe(0);
+    expect(run.version).toEqual({ name: "0.4.0", code: 300 });
+  });
+
+  // Nothing to do still has to mean success. This is the state the script's own
+  // advice leaves behind - run `npm run version:sync`, commit the result - and
+  // the script returns on it before either branch the two tests above reach, so
+  // nothing else says what it exits with. Getting it wrong fails the gate on
+  // every pull request and stops the build before `zeus build` is ever called.
+  it("passes the check when both numbers are already right", () => {
+    const run = runScript({ released: "0.4.0", name: "0.4.0", code: 400 }, "--check");
+    expect(run.status).toBe(0);
+    expect(run.output).toContain("already");
+    expect(run.version).toEqual({ name: "0.4.0", code: 400 });
+  });
+
+  it("writes both numbers when it is not just checking", () => {
+    const run = runScript({ released: "0.4.0", name: "0.3.0", code: 300 });
+    expect(run.status).toBe(0);
+    expect(run.version).toEqual({ name: "0.4.0", code: 400 });
+  });
+
+  it("refuses a release version it cannot pack into a code", () => {
+    const run = runScript({ released: "0.100.0", name: "0.99.0", code: 9900 });
+    expect(run.status).not.toBe(0);
+    expect(run.output).toContain("under 100");
+    expect(run.version).toEqual({ name: "0.99.0", code: 9900 });
   });
 });
 

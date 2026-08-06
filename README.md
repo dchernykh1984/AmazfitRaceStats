@@ -86,6 +86,7 @@ Edit these in the Zepp phone app, on the mini app's settings screen:
 ## Continuous integration and releases
 
 Every pull request must pass the required checks: Prettier, ESLint, the unit tests,
+`npm run version:check` (that `app.json` still names the version being released),
 `pre-commit`, commitizen (Conventional Commits), `actionlint`, and an OSV dependency
 scan.
 
