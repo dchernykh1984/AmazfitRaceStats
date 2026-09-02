@@ -9,3 +9,6 @@ CHANGELOG.md
 # line. Formatting it here would fail the release PR's own checks over a file
 # nobody hand-formats anyway.
 app.json
+
+# Agent config, checked by the no-non-ascii hook, not hand-formatted by prettier
+.claude/
