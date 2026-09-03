@@ -18,6 +18,9 @@ from pathlib import Path
 # Mirrors the files pattern of the no-non-ascii hook in .pre-commit-config.yaml.
 CHECKED_SUFFIXES = {".mjs", ".js", ".yml", ".yaml", ".md", ".json"}
 EXEMPT_NAMES = {"CHANGELOG.md", "package-lock.json"}
+# The on-watch translations are legitimately non-ASCII; the pre-commit hook excludes
+# them by path, so this one has to as well or every locale edit is blocked.
+EXEMPT_PATH_PARTS = ("i18n",)
 MAX_REPORTED_LINES = 5
 
 
@@ -33,6 +36,8 @@ def main() -> int:
 
     path = Path(raw_path)
     if path.suffix not in CHECKED_SUFFIXES or path.name in EXEMPT_NAMES:
+        return 0
+    if any(part in EXEMPT_PATH_PARTS for part in path.parts):
         return 0
     try:
         text = path.read_text(encoding="utf-8")
