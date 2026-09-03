@@ -1,6 +1,17 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/confirm_outward_commands.py\""
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
@@ -24,9 +35,13 @@
       "Bash(git log:*)",
       "Bash(git branch:*)",
       "Bash(git show:*)",
+      "Bash(git fetch:*)",
       "Bash(gh pr view:*)",
+      "Bash(gh pr diff:*)",
       "Bash(gh pr checks:*)",
-      "Bash(gh pr list:*)"
+      "Bash(gh pr list:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)"
     ]
   }
 }
