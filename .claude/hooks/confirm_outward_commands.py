@@ -5,8 +5,12 @@ The rule in this repository is that anything outward-facing or hard to reverse -
 a merge, a tag, a release, a branch deletion, a history rewrite - happens only after the
 person maintaining it says yes to that exact command. Narrating the command is not
 consent. This hook makes the harness enforce that rather than leaving it to an agent's
-memory: it turns such a Bash command into a permission prompt whatever the session's
+memory: it turns such a command into a permission prompt whatever the session's
 permission mode is. It never denies anything, so approving still takes one keystroke.
+
+It guards every shell tool, not just Bash: the same `git push` typed into PowerShell is
+the same push, and a guard that only watches one of them is a guard an agent walks past
+by picking the other shell.
 
 Read-only inspection (status, log, diff, fetch, gh ... view/list/checks) is untouched.
 """
@@ -16,6 +20,10 @@ from __future__ import annotations
 import json
 import re
 import sys
+
+# The shell tools whose commands this guard reads. Both carry the command line in
+# tool_input.command.
+SHELL_TOOLS = {"Bash", "PowerShell"}
 
 # (pattern, what to tell the person approving it)
 RULES = [
@@ -46,7 +54,7 @@ def main() -> int:
     except ValueError:
         return 0
 
-    if payload.get("tool_name") != "Bash":
+    if payload.get("tool_name") not in SHELL_TOOLS:
         return 0
 
     command = (payload.get("tool_input") or {}).get("command") or ""
