@@ -12,3 +12,7 @@ app.json
 
 # Agent config, checked by the no-non-ascii hook, not hand-formatted by prettier
 .claude/
+
+# Codex context follows the same formatting policy as Claude context.
+.agents/
+.codex/

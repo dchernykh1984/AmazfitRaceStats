@@ -56,3 +56,12 @@ repos:
         pass_filenames: false
         files: '\.m?js$'
         stages: [pre-push]
+
+  - repo: local
+    hooks:
+      - id: codex-hook-tests
+        name: Codex edit hook regression tests
+        entry: python3 .codex/hooks/test_post_edit.py
+        language: system
+        pass_filenames: false
+        files: ^\.codex/
