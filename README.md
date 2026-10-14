@@ -85,6 +85,12 @@ Edit these in the Zepp phone app, on the mini app's settings screen:
 - **Bib number** - the rider's race number.
 - **Rows and Row 1..N** - how many metrics to show and which metric each row shows.
 
+Four additional row metrics show the time gap and size of the distinct participant
+group ahead and behind. The generator chains adjacent competitors with gaps of at
+most 10 seconds by default (configurable for absolute statistics), skips your own
+group, and measures the gap to the nearest member of the neighbouring group. A
+missing neighbour shows `--`. Previously saved row choices retain their indices.
+
 ## Continuous integration and releases
 
 Every pull request must pass the required checks: Prettier, ESLint, the unit tests,
