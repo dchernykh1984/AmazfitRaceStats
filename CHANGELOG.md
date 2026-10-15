@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/dchernykh1984/AmazfitRaceStats/compare/amazfit-race-stats-v0.2.2...amazfit-race-stats-v0.3.0) (2026-10-15)
+
+
+### Features
+
+* **stats:** display neighbouring participant group gaps and sizes ([bac1bbd](https://github.com/dchernykh1984/AmazfitRaceStats/commit/bac1bbdef7b6e37605625a5c8962fcee437ecfc1))
+
+
+### Bug Fixes
+
+* **i18n:** distinguish participant packs from classification groups ([2463021](https://github.com/dchernykh1984/AmazfitRaceStats/commit/2463021113913c018d37bfcfe7d5320a9bdd89f6))
+
 ## [0.2.2](https://github.com/dchernykh1984/AmazfitRaceStats/compare/amazfit-race-stats-v0.2.1...amazfit-race-stats-v0.2.2) (2026-08-06)
 
 
